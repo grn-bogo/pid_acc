@@ -5,22 +5,32 @@
 
 #include <QObject>
 #include <QTimer>
-#include <icargraphics.h>
+#include <qcargraphics.h>
 #include <pidcontroller.h>
 
-class CarModel : QObject
+
+class CarModel : public QObject
 {
     Q_OBJECT
 
 public:
-    CarModel(ICarGraphics& carGraphics, double dx = 2.5):
+    CarModel(double dx = 2.5, int trackEnd = 1800):
         preferredDx_(dx),
-        carGraphics_(carGraphics),
-        pid_(1, 0.04, -0.04)
+        pid_(1, 0.05, -0.05),
+        id_(CarModel::carID++),
+        trackEnd_(trackEnd)
+
     {
         connect(&this->innerClock_, SIGNAL(timeout()), this, SLOT(update()));
-        innerClock_.start(20);
+        innerClock_.start(30);
     }
+
+    inline static int carID = 1;
+    int id() { return id_; }
+
+signals:
+    void lanePosChanged(double newPos);
+    void reachedLaneEnd(int carID);
 
 protected slots:
     void setPreferredDx(double newDx)
@@ -32,21 +42,25 @@ protected slots:
         double dxAdjustment = pid_.calcAdjustment(preferredDx_, currentDx_);
         currentDx_ += dxAdjustment;
         xPos_ += currentDx_;
-        qDebug() << "CAR DX: " << currentDx_;
-        carGraphics_.setXPos(xPos_);
+        emit lanePosChanged(xPos_);
+//        qDebug() << "CAR DX: " << currentDx_;
+        if (xPos_ > trackEnd_) emit reachedLaneEnd(id_);
     }
-    void frontSensor(double obstacleDistance, double obstacleDx)
-    {
+//    void frontSensor(double obstacleDistance, double obstacleDx)
+//    {
 
-    }
+//    }
 
 protected:
     double xPos_ = 0;
     double preferredDx_ = 0;
     double currentDx_ = 0;
     QTimer innerClock_;
-    ICarGraphics& carGraphics_;
     PIDController pid_;
+    int id_;
+    int trackEnd_;
 };
+
+
 
 #endif // CARMODEL_H

@@ -3,9 +3,11 @@
 
 #include <QBrush>
 #include <QGraphicsRectItem>
-#include <icargraphics.h>
-class QCarGraphics : public ICarGraphics, public QGraphicsRectItem
+
+class QCarGraphics : public QObject, public QGraphicsRectItem
 {
+    Q_OBJECT
+
 public:
     QCarGraphics()
     {
@@ -13,15 +15,18 @@ public:
         this->setBrush(QBrush(Qt::black));
     };
 
-    virtual void setXPos(double x) override
+public slots:
+    void setXPos(double x)
     {
         this->setX(x);
     };
 
-    virtual void setYPos(double y)
+    void setYPos(double y)
     {
         this->setX(y);
     };
+
+
 };
 
 #endif // CARGRAPHICS_H

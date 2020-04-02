@@ -14,13 +14,13 @@ public:
         updateInterval_(updateInterval),
         maxCtrlAdjust_(maxAdjust), minCtrlAdjust_(minAdjust),
         Kp_(Kp), Kd_(Kd), Ki_(Ki)
-    {};
+    {}
 
     double calcAdjustment(double setPoint, double processValue)
     {
-        qDebug() << "SETPOINT: " << setPoint << "PROCESSVALUE" << processValue;
+//        qDebug() << "SETPOINT: " << setPoint << "PROCESSVALUE" << processValue;
         double error = setPoint - processValue;
-        qDebug() << "ERROR: " << error;
+//        qDebug() << "ERROR: " << error;
 
         double proportionalTerm = Kp_ * error;
 
@@ -32,9 +32,9 @@ public:
 
         double adjustment = proportionalTerm + integralTerm + derivativeTerm;
 
-        qDebug() << "ADJUSTMENT: " << adjustment;
+//        qDebug() << "ADJUSTMENT: " << adjustment;
         return adjustInRange(adjustment);
-    };
+    }
 
     double adjustInRange(double adjustment)
     {
