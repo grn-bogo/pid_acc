@@ -27,35 +27,50 @@ public:
         mt_ = std::make_unique<std::mt19937>(rd_->operator()());
         dx_distro_ = std::make_unique<std::uniform_real_distribution<double> >(MIN_CAR_DX, MAX_CAR_DX);
         gen_distro_ = std::make_unique<std::uniform_int_distribution<int> >(MIN_GEN_INTERVAL, MAX_GEN_INTERVAL);
-        QTimer::singleShot(randGenInterval(), this, SLOT(trigger()));
+        connect(&envUpdate_, SIGNAL(timeout()), this, SLOT(update()));
+        envUpdate_.start(40);
+        QTimer::singleShot(0, this, SLOT(trigger()));
     }
 
 public slots:
     void removeCar(int carID)
     {
-        envScene_.removeItem(cars_[carID].second.get());
-        cars_.erase(carID);
+        auto it = find_if(cars_.rbegin(), cars_.rend(),
+                          [&carID](const std::pair<CarModel*, QCarGraphics*>& pair) { return pair.first->id() == carID; });
+        envScene_.removeItem(it->second);
+        delete it->second;
+        delete it->first;
+        cars_.pop_back();
     }
 
     void trigger()
     {
         addCar();
-        int nextCarInMs = randGenInterval();
-        QTimer::singleShot(nextCarInMs, this, SLOT(trigger()));
+        QTimer::singleShot(randGenInterval(), this, SLOT(trigger()));
     }
 
     void addCar()
     {
-        auto carGrPtr = std::make_unique<QCarGraphics>();
-        auto carPtr = std::make_unique<CarModel>(randDx());
-        connect(carPtr.get(), SIGNAL(reachedLaneEnd(int)), this, SLOT(removeCar(int)));
-        connect(carPtr.get(), SIGNAL(lanePosChanged(double)), carGrPtr.get(), SLOT(setXPos(double)));
-        envScene_.addItem(carGrPtr.get());
-        cars_.insert(
-                    std::make_pair(
-                        carPtr->id(),
-                        std::make_pair(std::move(carPtr), std::move(carGrPtr))));
+        QCarGraphics* carGrPtr = new QCarGraphics();
+        CarModel* carPtr = new CarModel(randDx());
+        connect(carPtr, SIGNAL(reachedLaneEnd(int)), this, SLOT(removeCar(int)));
+        connect(carPtr, SIGNAL(lanePosChanged(double)), carGrPtr, SLOT(setXPos(double)));
+        envScene_.addItem(carGrPtr);
+        cars_.emplace_back(std::make_pair(std::move(carPtr), std::move(carGrPtr)));
+    }
 
+    void update()
+    {
+        if (cars_.size() < 2) return;
+        std::sort(cars_.begin(),
+                  cars_.end(),
+                  [](const std::pair<CarModel*, QCarGraphics*>& carOne, const std::pair<CarModel*, QCarGraphics*>& carTwo)
+                    { return carOne.first->xPos() < carTwo.first->xPos(); });
+        for(std::size_t i = 0; i < cars_.size() - 2; ++i)
+        {
+            double distanceToNext = cars_[i + 1].first->xPos() - cars_[i].first->xPos();
+            if (distanceToNext < 80.0) cars_[i].first->frontSensor(distanceToNext, cars_[i + 1].first->currentDx());
+        }
     }
 
 protected:
@@ -68,14 +83,13 @@ protected:
     std::unique_ptr<std::uniform_real_distribution<double> > dx_distro_;
     std::unique_ptr<std::uniform_int_distribution<int> >gen_distro_;
     QGraphicsScene& envScene_;
-    std::unordered_map<int, std::pair<std::unique_ptr<CarModel>, std::unique_ptr<QCarGraphics>> > cars_;
+    QTimer envUpdate_;
+    std::vector<std::pair<CarModel*, QCarGraphics*>> cars_;
 
     double MAX_CAR_DX = 1.5;
-    double MIN_CAR_DX = 3.5;
-    int MIN_GEN_INTERVAL = 3000;
-    int MAX_GEN_INTERVAL = 6000;
-
-
+    double MIN_CAR_DX = 2.5;
+    int MIN_GEN_INTERVAL = 2000;
+    int MAX_GEN_INTERVAL = 4000;
 
 };
 

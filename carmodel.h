@@ -14,42 +14,45 @@ class CarModel : public QObject
     Q_OBJECT
 
 public:
-    CarModel(double dx = 2.5, int trackEnd = 1800):
+    CarModel(double dx = 2.5, int trackEnd = 1820):
         preferredDx_(dx),
-        pid_(1, 0.05, -0.05),
+        pid_(1, 0.04, -0.04),
         id_(CarModel::carID++),
         trackEnd_(trackEnd)
 
     {
         connect(&this->innerClock_, SIGNAL(timeout()), this, SLOT(update()));
-        innerClock_.start(30);
+        innerClock_.start(40);
     }
 
     inline static int carID = 1;
-    int id() { return id_; }
+    int id() const { return id_; }
+    double preferredDx() const { return preferredDx_; }
+    double currentDx() const { return currentDx_; }
+    double xPos() const { return xPos_; }
+
+public slots:
+    void frontSensor(double obstacleDistance, double obstacleDx)
+    {
+        preferredDx_ = obstacleDx;
+        pid_.reset();
+    }
 
 signals:
     void lanePosChanged(double newPos);
     void reachedLaneEnd(int carID);
 
 protected slots:
-    void setPreferredDx(double newDx)
-    {
-        preferredDx_ = newDx;
-    }
+
     void update()
     {
         double dxAdjustment = pid_.calcAdjustment(preferredDx_, currentDx_);
         currentDx_ += dxAdjustment;
         xPos_ += currentDx_;
         emit lanePosChanged(xPos_);
-//        qDebug() << "CAR DX: " << currentDx_;
         if (xPos_ > trackEnd_) emit reachedLaneEnd(id_);
     }
-//    void frontSensor(double obstacleDistance, double obstacleDx)
-//    {
 
-//    }
 
 protected:
     double xPos_ = 0;
@@ -59,8 +62,8 @@ protected:
     PIDController pid_;
     int id_;
     int trackEnd_;
+
 };
 
-
-
 #endif // CARMODEL_H
+
