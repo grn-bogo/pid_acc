@@ -12,9 +12,8 @@ int main(int argc, char *argv[])
     QGraphicsScene scene;
     EnvController envCtrl(scene);
     envCtrl.init();
-    scene.setSceneRect(0, 0, 1820,300);
+    scene.setSceneRect(0, 0, 1820, 300);
     QGraphicsView view(&scene);
-//    view.fitInView(scene.sceneRect());
     view.showMaximized();
 
     return a.exec();

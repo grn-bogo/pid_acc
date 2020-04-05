@@ -4,15 +4,14 @@
 #include <QBrush>
 #include <QGraphicsRectItem>
 
-class QCarGraphics : public QObject, public QGraphicsRectItem
+class QCarGraphics : public QGraphicsRectItem
 {
-    Q_OBJECT
 
 public:
     QCarGraphics()
     {
-        this->setRect(0, 0, 20, 10);
-        this->setBrush(QBrush(Qt::black));
+        setRect(0, 0, 20, 10);
+        setBrush(QBrush(Qt::black));
     }
 
 public slots:

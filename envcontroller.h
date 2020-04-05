@@ -9,6 +9,7 @@
 #include <qcargraphics.h>
 #include <random>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <functional>
 
@@ -28,19 +29,36 @@ public:
         dx_distro_ = std::make_unique<std::uniform_real_distribution<double> >(MIN_CAR_DX, MAX_CAR_DX);
         gen_distro_ = std::make_unique<std::uniform_int_distribution<int> >(MIN_GEN_INTERVAL, MAX_GEN_INTERVAL);
         connect(&envUpdate_, SIGNAL(timeout()), this, SLOT(update()));
-        envUpdate_.start(40);
-        QTimer::singleShot(0, this, SLOT(trigger()));
+        envUpdate_.start(50);
+        QTimer::singleShot(randGenInterval(), this, SLOT(trigger()));
     }
 
 public slots:
+
+    void setCarXPos(int carID, double carPosX)
+    {
+        controllerMapping_[carID].second->setXPos(carPosX);
+    }
+
     void removeCar(int carID)
     {
+        if (removedCarIDs_.count(carID) == 1) return;
+
         auto it = find_if(cars_.rbegin(), cars_.rend(),
                           [&carID](const std::pair<CarModel*, QCarGraphics*>& pair) { return pair.first->id() == carID; });
+        if (it == cars_.rend()) return;
+
         envScene_.removeItem(it->second);
         delete it->second;
-        delete it->first;
-        cars_.pop_back();
+
+        this->disconnect(it->first);
+        it->first->disconnect(this);
+        it->first->deleteLater();
+
+        if (it == cars_.rbegin()) cars_.pop_back();
+        else cars_.erase(it.base());
+
+        removedCarIDs_.emplace(carID);
     }
 
     void trigger()
@@ -54,9 +72,12 @@ public slots:
         QCarGraphics* carGrPtr = new QCarGraphics();
         CarModel* carPtr = new CarModel(randDx());
         connect(carPtr, SIGNAL(reachedLaneEnd(int)), this, SLOT(removeCar(int)));
-        connect(carPtr, SIGNAL(lanePosChanged(double)), carGrPtr, SLOT(setXPos(double)));
+        connect(carPtr, SIGNAL(lanePosChanged(int, double)), this, SLOT(setCarXPos(int, double)));
         envScene_.addItem(carGrPtr);
-        cars_.emplace_back(std::make_pair(std::move(carPtr), std::move(carGrPtr)));
+//        auto modelViewPair = std::make_pair(std::move(carPtr), std::move(carGrPtr));
+        auto modelViewPair = std::make_pair(carPtr, carGrPtr);
+        cars_.emplace_back(modelViewPair);
+        controllerMapping_.insert(std::make_pair(carPtr->id(), modelViewPair));
     }
 
     void update()
@@ -82,14 +103,18 @@ protected:
     std::unique_ptr<std::mt19937> mt_;
     std::unique_ptr<std::uniform_real_distribution<double> > dx_distro_;
     std::unique_ptr<std::uniform_int_distribution<int> >gen_distro_;
+
     QGraphicsScene& envScene_;
     QTimer envUpdate_;
+
     std::vector<std::pair<CarModel*, QCarGraphics*>> cars_;
+    std::unordered_map<int, std::pair<CarModel*, QCarGraphics*>> controllerMapping_;
+    std::unordered_set<int> removedCarIDs_;
 
     double MAX_CAR_DX = 1.5;
     double MIN_CAR_DX = 2.5;
-    int MIN_GEN_INTERVAL = 2000;
-    int MAX_GEN_INTERVAL = 4000;
+    int MIN_GEN_INTERVAL = 3500;
+    int MAX_GEN_INTERVAL = 5500;
 
 };
 

@@ -14,7 +14,7 @@ class CarModel : public QObject
     Q_OBJECT
 
 public:
-    CarModel(double dx = 2.5, int trackEnd = 1820):
+    CarModel(double dx = 2.5, int trackEnd = 1770):
         preferredDx_(dx),
         pid_(1, 0.04, -0.04),
         id_(CarModel::carID++),
@@ -22,7 +22,7 @@ public:
 
     {
         connect(&this->innerClock_, SIGNAL(timeout()), this, SLOT(update()));
-        innerClock_.start(40);
+        innerClock_.start(50);
     }
 
     inline static int carID = 1;
@@ -34,12 +34,15 @@ public:
 public slots:
     void frontSensor(double obstacleDistance, double obstacleDx)
     {
-        preferredDx_ = obstacleDx;
-        pid_.reset();
+        if (preferredDx_ != obstacleDx)
+        {
+            pid_.reset();
+            preferredDx_ = obstacleDx;
+        }
     }
 
 signals:
-    void lanePosChanged(double newPos);
+    void lanePosChanged(int carID, double newPos);
     void reachedLaneEnd(int carID);
 
 protected slots:
@@ -48,8 +51,9 @@ protected slots:
     {
         double dxAdjustment = pid_.calcAdjustment(preferredDx_, currentDx_);
         currentDx_ += dxAdjustment;
+        if (currentDx_ < 0.0) currentDx_ = 0.02;
         xPos_ += currentDx_;
-        emit lanePosChanged(xPos_);
+        emit lanePosChanged(id_, xPos_);
         if (xPos_ > trackEnd_) emit reachedLaneEnd(id_);
     }
 

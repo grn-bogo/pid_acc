@@ -12,7 +12,7 @@ public:
             double maxAdjust, double minAdjust,
             double Kp = 0.03, double Kd = 0.01, double Ki = 0.001
             ):
-        updateInterval_(updateInterval),
+        updateInterval_(updateInterval > 0 ? updateInterval : 1.0),
         maxCtrlAdjust_(maxAdjust), minCtrlAdjust_(minAdjust),
         Kp_(Kp), Kd_(Kd), Ki_(Ki)
     {}
