@@ -5,22 +5,21 @@
 
 class PIDController
 {
+
 public:
     PIDController(
             double updateInterval,
             double maxAdjust, double minAdjust,
             double Kp = 0.03, double Kd = 0.01, double Ki = 0.001
             ):
-        updateInterval_(updateInterval),
+        updateInterval_(updateInterval > 0 ? updateInterval : 1.0),
         maxCtrlAdjust_(maxAdjust), minCtrlAdjust_(minAdjust),
         Kp_(Kp), Kd_(Kd), Ki_(Ki)
-    {};
+    {}
 
     double calcAdjustment(double setPoint, double processValue)
     {
-        qDebug() << "SETPOINT: " << setPoint << "PROCESSVALUE" << processValue;
         double error = setPoint - processValue;
-        qDebug() << "ERROR: " << error;
 
         double proportionalTerm = Kp_ * error;
 
@@ -32,9 +31,8 @@ public:
 
         double adjustment = proportionalTerm + integralTerm + derivativeTerm;
 
-        qDebug() << "ADJUSTMENT: " << adjustment;
         return adjustInRange(adjustment);
-    };
+    }
 
     double adjustInRange(double adjustment)
     {
@@ -42,6 +40,8 @@ public:
         else if (adjustment > maxCtrlAdjust_) return maxCtrlAdjust_;
         else return adjustment;
     }
+
+    void reset() { integralSum_ = 0.0; }
 
 private:
     double updateInterval_;

@@ -3,25 +3,28 @@
 
 #include <QBrush>
 #include <QGraphicsRectItem>
-#include <icargraphics.h>
-class QCarGraphics : public ICarGraphics, public QGraphicsRectItem
+
+class QCarGraphics : public QGraphicsRectItem
 {
+
 public:
     QCarGraphics()
     {
-        this->setRect(0, 0, 20, 10);
-        this->setBrush(QBrush(Qt::black));
-    };
+        setRect(0, 0, 20, 10);
+        setBrush(QBrush(Qt::black));
+    }
 
-    virtual void setXPos(double x) override
+public slots:
+    void setXPos(double x)
     {
         this->setX(x);
-    };
+    }
 
-    virtual void setYPos(double y)
+    void setYPos(double y)
     {
         this->setX(y);
-    };
+    }
+
 };
 
 #endif // CARGRAPHICS_H
