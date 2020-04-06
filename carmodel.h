@@ -53,8 +53,18 @@ protected slots:
         currentDx_ += dxAdjustment;
         if (currentDx_ < minDx_) currentDx_ = minDx_;
         xPos_ += currentDx_;
-        if (xPos_ > trackEnd_) emit reachedLaneEnd(id_);
+        if (xPos_ > trackEnd_)
+        {
+            disconnectClock();
+            emit reachedLaneEnd(id_);
+        }
         else emit lanePosChanged(id_, xPos_);
+    }
+
+    void disconnectClock()
+    {
+        innerClock_.stop();
+        innerClock_.disconnect(this);
     }
 
 protected:
@@ -65,7 +75,7 @@ protected:
     QTimer innerClock_;
     PIDController pid_;
     int id_;
-    int trackEnd_;
+    int trackEnd_;    
 
 private:
     double minDx_ = 0.002;
