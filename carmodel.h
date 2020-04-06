@@ -22,7 +22,7 @@ public:
 
     {
         connect(&this->innerClock_, SIGNAL(timeout()), this, SLOT(update()));
-        innerClock_.start(50);
+        innerClock_.start(40);
     }
 
     inline static int carID = 1;

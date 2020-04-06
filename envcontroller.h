@@ -29,8 +29,8 @@ public:
         dx_distro_ = std::make_unique<std::uniform_real_distribution<double> >(MIN_CAR_DX, MAX_CAR_DX);
         gen_distro_ = std::make_unique<std::uniform_int_distribution<int> >(MIN_GEN_INTERVAL, MAX_GEN_INTERVAL);
         connect(&envUpdate_, SIGNAL(timeout()), this, SLOT(update()));
-        envUpdate_.start(50);
-        QTimer::singleShot(randGenInterval(), this, SLOT(trigger()));
+        envUpdate_.start(40);
+        QTimer::singleShot(500, this, SLOT(trigger()));
     }
 
 public slots:

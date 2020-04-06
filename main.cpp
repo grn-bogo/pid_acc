@@ -12,9 +12,11 @@ int main(int argc, char *argv[])
     QGraphicsScene scene;
     EnvController envCtrl(scene);
     envCtrl.init();
-    scene.setSceneRect(0, 0, 1820, 300);
-    QGraphicsView view(&scene);
-    view.showMaximized();
+    scene.setSceneRect(0, 0, 1820, 100);
+    QGraphicsView view;
+    view.fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
+    view.setScene(&scene);
+    view.show();
 
     return a.exec();
 }
