@@ -15,8 +15,8 @@ class CarModel : public QObject
 
 public:
     CarModel(double dx = 2.5, int trackEnd = 1770):
-        preferredDx_(dx),
-        pid_(1, 0.04, -0.04),
+        setpointDx_(dx),
+        pid_(1, 0.04, -0.07),
         id_(CarModel::carID++),
         trackEnd_(trackEnd)
 
@@ -27,17 +27,17 @@ public:
 
     inline static int carID = 1;
     int id() const { return id_; }
-    double preferredDx() const { return preferredDx_; }
+    double preferredDx() const { return setpointDx_; }
     double currentDx() const { return currentDx_; }
     double xPos() const { return xPos_; }
 
 public slots:
     void frontSensor(double obstacleDistance, double obstacleDx)
     {
-        if (preferredDx_ != obstacleDx)
+        if (setpointDx_ != obstacleDx)
         {
             pid_.reset();
-            preferredDx_ = obstacleDx;
+            setpointDx_ = obstacleDx;
         }
     }
 
@@ -49,23 +49,26 @@ protected slots:
 
     void update()
     {
-        double dxAdjustment = pid_.calcAdjustment(preferredDx_, currentDx_);
+        double dxAdjustment = pid_.calcAdjustment(setpointDx_, currentDx_);
         currentDx_ += dxAdjustment;
-        if (currentDx_ < 0.0) currentDx_ = 0.02;
+        if (currentDx_ < minDx_) currentDx_ = minDx_;
         xPos_ += currentDx_;
-        emit lanePosChanged(id_, xPos_);
         if (xPos_ > trackEnd_) emit reachedLaneEnd(id_);
+        else emit lanePosChanged(id_, xPos_);
     }
 
-
 protected:
-    double xPos_ = 0;
-    double preferredDx_ = 0;
-    double currentDx_ = 0;
+    double xPos_ = 0.0;
+    double prefferedDx_ = 0.0;
+    double setpointDx_ = 0.0;
+    double currentDx_ = 0.0;
     QTimer innerClock_;
     PIDController pid_;
     int id_;
     int trackEnd_;
+
+private:
+    double minDx_ = 0.002;
 
 };
 

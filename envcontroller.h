@@ -40,8 +40,16 @@ public slots:
         controllerMapping_[carID].second->setXPos(carPosX);
     }
 
-    void removeCar(int carID)
+    void triggerRemoveCar(int carID)
     {
+        removeNextCycle_ = carID;
+        QTimer::singleShot(0, this, SLOT(removeCar()));
+    }
+
+    void removeCar()
+    {
+        int carID = removeNextCycle_;
+
         if (removedCarIDs_.count(carID) == 1) return;
 
         auto it = find_if(cars_.rbegin(), cars_.rend(),
@@ -71,10 +79,10 @@ public slots:
     {
         QCarGraphics* carGrPtr = new QCarGraphics();
         CarModel* carPtr = new CarModel(randDx());
-        connect(carPtr, SIGNAL(reachedLaneEnd(int)), this, SLOT(removeCar(int)));
+        connect(carPtr, SIGNAL(reachedLaneEnd(int)), this, SLOT(triggerRemoveCar(int)));
         connect(carPtr, SIGNAL(lanePosChanged(int, double)), this, SLOT(setCarXPos(int, double)));
+
         envScene_.addItem(carGrPtr);
-//        auto modelViewPair = std::make_pair(std::move(carPtr), std::move(carGrPtr));
         auto modelViewPair = std::make_pair(carPtr, carGrPtr);
         cars_.emplace_back(modelViewPair);
         controllerMapping_.insert(std::make_pair(carPtr->id(), modelViewPair));
@@ -90,7 +98,7 @@ public slots:
         for(std::size_t i = 0; i < cars_.size() - 2; ++i)
         {
             double distanceToNext = cars_[i + 1].first->xPos() - cars_[i].first->xPos();
-            if (distanceToNext < 80.0) cars_[i].first->frontSensor(distanceToNext, cars_[i + 1].first->currentDx());
+            if (distanceToNext < 50.0) cars_[i].first->frontSensor(distanceToNext, cars_[i + 1].first->preferredDx());
         }
     }
 
@@ -110,10 +118,11 @@ protected:
     std::vector<std::pair<CarModel*, QCarGraphics*>> cars_;
     std::unordered_map<int, std::pair<CarModel*, QCarGraphics*>> controllerMapping_;
     std::unordered_set<int> removedCarIDs_;
+    int removeNextCycle_ = 0;
 
     double MAX_CAR_DX = 1.5;
     double MIN_CAR_DX = 2.5;
-    int MIN_GEN_INTERVAL = 3500;
+    int MIN_GEN_INTERVAL = 2500;
     int MAX_GEN_INTERVAL = 5500;
 
 };
