@@ -18,7 +18,7 @@ class EnvController : public QObject
     Q_OBJECT
 
 public:
-    EnvController(QGraphicsScene& envScene) :
+    EnvController(QGraphicsScene* const envScene=NULL) :
         envScene_(envScene)
     {}
 
@@ -29,7 +29,7 @@ public:
         dx_distro_ = std::make_unique<std::uniform_real_distribution<double> >(MIN_CAR_DX, MAX_CAR_DX);
         gen_distro_ = std::make_unique<std::uniform_int_distribution<int> >(MIN_GEN_INTERVAL, MAX_GEN_INTERVAL);
         connect(&envUpdate_, SIGNAL(timeout()), this, SLOT(update()));
-        envUpdate_.start(40);
+        envUpdate_.start(UPDATE_INTERVAL);
         QTimer::singleShot(500, this, SLOT(trigger()));
     }
 
@@ -46,26 +46,25 @@ public slots:
         QTimer::singleShot(0, this, SLOT(removeCar()));
     }
 
+    const CarModel* getCar(int carID)
+    {
+        return controllerMapping_[carID].first;
+    }
+
     void removeCar()
     {
         int carID = removeNextCycle_;
-
         if (removedCarIDs_.count(carID) == 1) return;
 
         auto it = find_if(cars_.rbegin(), cars_.rend(),
                           [&carID](const std::pair<CarModel*, QCarGraphics*>& pair) { return pair.first->id() == carID; });
-        if (it == cars_.rend()) return;
+        if (it == cars_.rend())
+            return;
 
-        envScene_.removeItem(it->second);
-        delete it->second;
-
-        this->disconnect(it->first);
-        it->first->disconnect(this);
-        it->first->deleteLater();
-
+        removeCarGraphics(it->second);
+        removeCarModel(it->first);
         if (it == cars_.rbegin()) cars_.pop_back();
         else cars_.erase(it.base());
-
         removedCarIDs_.emplace(carID);
     }
 
@@ -81,8 +80,9 @@ public slots:
         CarModel* carPtr = new CarModel(randDx());
         connect(carPtr, SIGNAL(reachedLaneEnd(int)), this, SLOT(triggerRemoveCar(int)));
         connect(carPtr, SIGNAL(lanePosChanged(int, double)), this, SLOT(setCarXPos(int, double)));
+        connect(&envUpdate_, SIGNAL(timeout()), carPtr, SLOT(update()));
+        if(envScene_) envScene_->addItem(carGrPtr);
 
-        envScene_.addItem(carGrPtr);
         auto modelViewPair = std::make_pair(carPtr, carGrPtr);
         cars_.emplace_back(modelViewPair);
         controllerMapping_.insert(std::make_pair(carPtr->id(), modelViewPair));
@@ -98,11 +98,25 @@ public slots:
         for(std::size_t i = 0; i < cars_.size() - 2; ++i)
         {
             double distanceToNext = cars_[i + 1].first->xPos() - cars_[i].first->xPos();
-            if (distanceToNext < 50.0) cars_[i].first->frontSensor(distanceToNext, cars_[i + 1].first->preferredDx());
+            if (distanceToNext < DISTANCE_TO_NEXT) cars_[i].first->frontSensor(cars_[i + 1].first->preferredDx());
         }
     }
 
 protected:
+
+    void removeCarModel(CarModel* carModel)
+    {
+        envUpdate_.disconnect(carModel);
+        this->disconnect(carModel);
+        carModel->disconnect(this);
+        carModel->deleteLater();
+    }
+
+    void removeCarGraphics(QCarGraphics* carGraphics)
+    {
+        if(envScene_) envScene_->removeItem(carGraphics);
+        delete carGraphics;
+    }
 
     double randDx() { return dx_distro_->operator()(*mt_.get()); }
     int randGenInterval() { return gen_distro_->operator()(*mt_.get()); }
@@ -112,7 +126,7 @@ protected:
     std::unique_ptr<std::uniform_real_distribution<double> > dx_distro_;
     std::unique_ptr<std::uniform_int_distribution<int> >gen_distro_;
 
-    QGraphicsScene& envScene_;
+    QGraphicsScene* const envScene_;
     QTimer envUpdate_;
 
     std::vector<std::pair<CarModel*, QCarGraphics*>> cars_;
@@ -120,10 +134,14 @@ protected:
     std::unordered_set<int> removedCarIDs_;
     int removeNextCycle_ = 0;
 
-    double MAX_CAR_DX = 1.5;
-    double MIN_CAR_DX = 2.5;
-    int MIN_GEN_INTERVAL = 2500;
-    int MAX_GEN_INTERVAL = 5500;
+
+    inline static const double MAX_CAR_DX = 1.8;
+    inline static double MIN_CAR_DX = 2.5;
+    inline static double DISTANCE_TO_NEXT = 50.0;
+    inline static int MIN_GEN_INTERVAL = 3000;
+    inline static int MAX_GEN_INTERVAL = 5500;
+
+    inline static int UPDATE_INTERVAL = 40;
 
 };
 

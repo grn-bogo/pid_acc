@@ -1,48 +1,43 @@
-#ifndef PIDTEST_H
-#define PIDTEST_H
+#ifndef ENVCTRLTEST_H
+#define ENVCTRLTEST_H
 
 #include <QtTest/QtTest>
+#include <QtTest/QSignalSpy>
 
-#include <pidcontroller.h>
+#include <autotest.h>
 
-class PIDTest : public QObject
+#include <envcontroller.h>
+
+class EnvCtrlTest : public QObject
 {
     Q_OBJECT
 
 public:
-    PIDTest() :
-        pid_(1, 0.04, -0.7)
-    {}
+    EnvCtrlTest() {}
+
 protected:
-    PIDController pid_;
-    double setPoint_ = 2.5;
-    double processValue_ = 0.0;
-    int stepsToSetPoint_ = 2000;
+    EnvController envCtrl_;
 
 private slots:
     void initTestCase()
     {
-        qDebug("called before everything else");
+        envCtrl_.init();
     }
 
-    void myFirstTest()
+    void testSingleCarReachSpeed()
     {
-        for(int i = 0; i < stepsToSetPoint_; ++i)
-            processValue_ += pid_.calcAdjustment(setPoint_, processValue_);
-        QVERIFY(processValue_ == setPoint_);
+        envCtrl_.addCar();
+        QSignalSpy spy(envCtrl_.getCar(1), SIGNAL(lanePosChanged(int carID, double newPos)));
+        for(int i= 0; i < 1000; ++i)
+        {
+            envCtrl_.update();
+        }
+        envCtrl_.removeCar();
     }
 
-    void mySecondTest()
-    {
-        QVERIFY(1 != 2);
-    }
-
-    void cleanupTestCase()
-    {
-        qDebug("called after myFirstTest and mySecondTest");
-    }
+    void cleanupTestCase(){}
 };
 
-QTEST_MAIN(PIDTest)
+DECLARE_TEST(EnvCtrlTest)
 
-#endif // PIDTEST_H
+#endif // ENVCTRLTEST_H

@@ -2,6 +2,7 @@
 #define PIDTEST_H
 
 #include <QtTest/QtTest>
+#include <autotest.h>
 
 #include <pidcontroller.h>
 
@@ -28,6 +29,6 @@ private slots:
     }
 };
 
-QTEST_MAIN(PIDTest)
+DECLARE_TEST(PIDTest)
 
 #endif // PIDTEST_H
