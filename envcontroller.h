@@ -135,8 +135,8 @@ protected:
     int removeNextCycle_ = 0;
 
 
-    inline static const double MAX_CAR_DX = 1.8;
-    inline static double MIN_CAR_DX = 2.5;
+    inline static const double MIN_CAR_DX = 1.8;
+    inline static double MAX_CAR_DX = 2.5;
     inline static double DISTANCE_TO_NEXT = 50.0;
     inline static int MIN_GEN_INTERVAL = 3000;
     inline static int MAX_GEN_INTERVAL = 5500;
