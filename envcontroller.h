@@ -46,7 +46,7 @@ public slots:
         QTimer::singleShot(0, this, SLOT(removeCar()));
     }
 
-    const CarModel* getCar(int carID)
+    const CarModel* getCarModel(int carID)
     {
         return controllerMapping_[carID].first;
     }

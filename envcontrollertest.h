@@ -27,7 +27,7 @@ private slots:
     void testSingleCarReachSpeed()
     {
         envCtrl_.addCar();
-        QSignalSpy spy(envCtrl_.getCar(1), SIGNAL(lanePosChanged(int carID, double newPos)));
+        QSignalSpy spy(envCtrl_.getCarModel(1), SIGNAL(lanePosChanged(int, double)));
         for(int i= 0; i < 1000; ++i)
         {
             envCtrl_.update();

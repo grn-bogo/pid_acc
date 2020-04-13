@@ -44,11 +44,7 @@ public slots:
         currentDx_ += dxAdjustment;
         if (currentDx_ < minDx_) currentDx_ = minDx_;
         xPos_ += currentDx_;
-        if (xPos_ > trackEnd_)
-        {
-            disconnectClock();
-            emit reachedLaneEnd(id_);
-        }
+        if (xPos_ > trackEnd_) emit reachedLaneEnd(id_);
         else emit lanePosChanged(id_, xPos_);
     }
 
@@ -56,20 +52,11 @@ signals:
     void lanePosChanged(int carID, double newPos);
     void reachedLaneEnd(int carID);
 
-protected slots:
-
-    void disconnectClock()
-    {
-        innerClock_.stop();
-        innerClock_.disconnect(this);
-    }
-
 protected:
     double xPos_ = 0.0;
     double prefferedDx_ = 0.0;
     double setpointDx_ = 0.0;
     double currentDx_ = 0.0;
-    QTimer innerClock_;
     PIDController pid_;
     int id_;
     int trackEnd_;    
