@@ -10,7 +10,7 @@ class QCarGraphics : public QGraphicsRectItem
 public:
     QCarGraphics()
     {
-        setRect(0, 0, 20, 10);
+        setRect(0, 45, 20, 10);
         setBrush(QBrush(Qt::black));
     }
 

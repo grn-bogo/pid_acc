@@ -20,10 +20,7 @@ public:
         id_(CarModel::carID++),
         trackEnd_(trackEnd)
 
-    {
-        connect(&this->innerClock_, SIGNAL(timeout()), this, SLOT(update()));
-        innerClock_.start(50);
-    }
+    {}
 
     inline static int carID = 1;
     int id() const { return id_; }
@@ -32,7 +29,7 @@ public:
     double xPos() const { return xPos_; }
 
 public slots:
-    void frontSensor(double obstacleDistance, double obstacleDx)
+    void frontSensor(double obstacleDx)
     {
         if (setpointDx_ != obstacleDx)
         {
@@ -40,12 +37,6 @@ public slots:
             setpointDx_ = obstacleDx;
         }
     }
-
-signals:
-    void lanePosChanged(int carID, double newPos);
-    void reachedLaneEnd(int carID);
-
-protected slots:
 
     void update()
     {
@@ -57,15 +48,18 @@ protected slots:
         else emit lanePosChanged(id_, xPos_);
     }
 
+signals:
+    void lanePosChanged(int carID, double newPos);
+    void reachedLaneEnd(int carID);
+
 protected:
     double xPos_ = 0.0;
     double prefferedDx_ = 0.0;
     double setpointDx_ = 0.0;
     double currentDx_ = 0.0;
-    QTimer innerClock_;
     PIDController pid_;
     int id_;
-    int trackEnd_;
+    int trackEnd_;    
 
 private:
     double minDx_ = 0.002;
