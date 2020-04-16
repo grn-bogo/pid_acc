@@ -43,6 +43,7 @@ public slots:
     void triggerRemoveCar(int carID)
     {
         removeNextCycle_ = carID;
+        //schedule for next event loop cycle
         QTimer::singleShot(0, this, SLOT(removeCar()));
     }
 

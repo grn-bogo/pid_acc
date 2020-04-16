@@ -23,6 +23,7 @@ SOURCES += \
 HEADERS += \
     autotest.h \
     carmodel.h \
+    carmodeltest.h \
     envcontroller.h \
     envcontrollertest.h \
     pidcontroller.h \
