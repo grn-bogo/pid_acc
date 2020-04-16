@@ -26,15 +26,6 @@ private slots:
 
     void testSingleCarReachSpeed()
     {
-        envCtrl_.addCar();
-        const CarModel* carModel = envCtrl_.getCarModel(1);
-        QSignalSpy spy(carModel, SIGNAL(lanePosChanged(int, double)));
-        for(int i= 0; i < 1000; ++i)
-        {
-            envCtrl_.update();
-        }
-        QCOMPARE(carModel->currentDx(), carModel->preferredDx());
-        envCtrl_.removeCar();
     }
 
     void cleanupTestCase(){}

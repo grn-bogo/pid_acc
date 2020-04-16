@@ -21,7 +21,7 @@ private slots:
     void testCarReachSpeed1000()
     {
         CarModel carModel;
-        double tolerance = 0.0001;
+        double tolerance = 0.00001;
         for(int i= 0; i < 1000; ++i) carModel.update();
         double epsilon = qFabs(carModel.currentDx() - carModel.preferredDx());
         QVERIFY(epsilon < tolerance);
@@ -36,18 +36,13 @@ private slots:
         QVERIFY(epsilon < tolerance);
     }
 
-    void testCarPosUpdate()
-    {
-        CarModel carModel;
-        QSignalSpy posChangedSpy(&carModel, SIGNAL(lanePosChanged(int, double)));
-        for(int i= 0; i < 2000; ++i) carModel.update();
-    }
-
     void testCarReachTrackEnd()
     {
-        CarModel carModel;
-        QSignalSpy laneEndspy(&carModel, SIGNAL(eachedLaneEnd(int)));
-        for(int i= 0; i < 2000; ++i) carModel.update();
+        CarModel carModel(2.5, 2500); //dx: 2.5, track end: 2500
+        int stepsToTrackEnd = 1100;
+        QSignalSpy laneEndSpy(&carModel, SIGNAL(reachedLaneEnd(int)));
+        for(int i= 0; i < stepsToTrackEnd; ++i) carModel.update();
+        QVERIFY(laneEndSpy.count() > 1);
     }
 
 };

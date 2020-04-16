@@ -30,12 +30,12 @@ public:
         gen_distro_ = std::make_unique<std::uniform_int_distribution<int> >(MIN_GEN_INTERVAL, MAX_GEN_INTERVAL);
         connect(&envUpdate_, SIGNAL(timeout()), this, SLOT(update()));
         envUpdate_.start(UPDATE_INTERVAL);
-        QTimer::singleShot(500, this, SLOT(trigger()));
+        QTimer::singleShot(START_DELAY, this, SLOT(trigger()));
     }
 
 public slots:
 
-    void setCarXPos(int carID, double carPosX)
+    void updateCarView(int carID, double carPosX)
     {
         controllerMapping_[carID].second->setXPos(carPosX);
     }
@@ -80,7 +80,7 @@ public slots:
         QCarGraphics* carGrPtr = new QCarGraphics();
         CarModel* carPtr = new CarModel(randDx());
         connect(carPtr, SIGNAL(reachedLaneEnd(int)), this, SLOT(triggerRemoveCar(int)));
-        connect(carPtr, SIGNAL(lanePosChanged(int, double)), this, SLOT(setCarXPos(int, double)));
+        connect(carPtr, SIGNAL(lanePosChanged(int, double)), this, SLOT(updateCarView(int, double)));
         connect(&envUpdate_, SIGNAL(timeout()), carPtr, SLOT(update()));
         if(envScene_) envScene_->addItem(carGrPtr);
 
@@ -143,6 +143,8 @@ protected:
     inline static int MAX_GEN_INTERVAL = 5500;
 
     inline static int UPDATE_INTERVAL = 40;
+    inline static int START_DELAY = 500;
+
 
 };
 
