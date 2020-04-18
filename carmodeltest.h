@@ -16,11 +16,18 @@ class CarModelTest : public QObject
 public:
     CarModelTest() {}
 
+protected:
+    std::shared_ptr<InitialConditions> initCnds_;
+
 private slots:
+    void initTestCase()
+    {
+        initCnds_ = std::make_shared<InitialConditions>();
+    }
 
     void testCarReachSpeed1000()
     {
-        CarModel carModel;
+        CarModel carModel(initCnds_);
         double tolerance = 0.00001;
         for(int i= 0; i < 1000; ++i) carModel.update();
         double epsilon = qFabs(carModel.currentDx() - carModel.preferredDx());
@@ -29,7 +36,7 @@ private slots:
 
     void testCarReachSpeed400()
     {
-        CarModel carModel;
+        CarModel carModel(initCnds_);
         double tolerance = 0.1;
         for(int i= 0; i < 400; ++i) carModel.update();
         double epsilon = qFabs(carModel.currentDx() - carModel.preferredDx());
@@ -38,7 +45,7 @@ private slots:
 
     void testCarReachTrackEnd()
     {
-        CarModel carModel(2.5, 2500); //dx: 2.5, track end: 2500
+        CarModel carModel(initCnds_, 1.77);
         int stepsToTrackEnd = 1100;
         QSignalSpy laneEndSpy(&carModel, SIGNAL(reachedLaneEnd(int)));
         for(int i= 0; i < stepsToTrackEnd; ++i) carModel.update();

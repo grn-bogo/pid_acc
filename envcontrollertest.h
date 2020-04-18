@@ -16,12 +16,14 @@ public:
     EnvCtrlTest() {}
 
 protected:
-    EnvController envCtrl_;
+    std::unique_ptr<EnvController> envCtrl_;
+    std::shared_ptr<InitialConditions> initCnds_;
 
 private slots:
     void initTestCase()
     {
-        envCtrl_.init();
+        initCnds_ = std::make_shared<InitialConditions>();
+        envCtrl_ = std::make_unique<EnvController>(initCnds_);
     }
 
     void testSingleCarReachSpeed()

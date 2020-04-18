@@ -21,6 +21,7 @@ SOURCES += \
 HEADERS += \
     carmodel.h \
     envcontroller.h \
+    initialconditions.h \
     pidcontroller.h \
     qcargraphics.h
 

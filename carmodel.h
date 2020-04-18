@@ -5,6 +5,8 @@
 
 #include <QObject>
 #include <QTimer>
+
+#include <initialconditions.h>
 #include <qcargraphics.h>
 #include <pidcontroller.h>
 
@@ -14,12 +16,11 @@ class CarModel : public QObject
     Q_OBJECT
 
 public:
-    CarModel(double dx = 2.5, int trackEnd = 1770):
+    CarModel(std::shared_ptr<InitialConditions> ic, double dx = 2.5):
         setpointDx_(dx),
-        pid_(1, 0.04, -0.07),
+        pid_(ic, dx),
         id_(CarModel::carID++),
-        trackEnd_(trackEnd)
-
+        trackEnd_(ic->laneLength)
     {}
 
     inline static int carID = 1;
@@ -34,13 +35,13 @@ public slots:
         if (setpointDx_ != obstacleDx)
         {
             pid_.reset();
-            setpointDx_ = obstacleDx;
+            pid_.setPoint(obstacleDx);
         }
     }
 
     void update()
     {
-        double dxAdjustment = pid_.calcAdjustment(setpointDx_, currentDx_);
+        double dxAdjustment = pid_.calcAdjustment(currentDx_);
         currentDx_ += dxAdjustment;
         if (currentDx_ < minDx_) currentDx_ = minDx_;
         xPos_ += currentDx_;

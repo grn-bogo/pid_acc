@@ -11,37 +11,43 @@ class PIDTest : public QObject
     Q_OBJECT
 
 public:
-    PIDTest() :
-        pid_(1, 0.04, -0.7)
-    {}
+    PIDTest() {}
 protected:
-    PIDController pid_;
-    double setPoint_ = 2.5;
+    std::shared_ptr<InitialConditions> initCnds_;
+    double targetvValue_ = 2.5;
     double processValue_ = 0.0;
 
 private slots:
+    void initTestCase()
+    {
+        initCnds_ = std::make_shared<InitialConditions>();
+    }
+
     void testStablizationIn2000()
     {
+        PIDController pid(initCnds_, targetvValue_);
         double stepsToSetPoint = 2000;
         for(int i = 0; i < stepsToSetPoint; ++i)
-            processValue_ += pid_.calcAdjustment(setPoint_, processValue_);
-        QVERIFY(processValue_ == setPoint_);
+            processValue_ += pid.calcAdjustment(processValue_);
+        QVERIFY(processValue_ == targetvValue_);
     }
 
     void testStablizationIn1000()
     {
+        PIDController pid(initCnds_, targetvValue_);
         double stepsToSetPoint = 1000;
         for(int i = 0; i < stepsToSetPoint; ++i)
-            processValue_ += pid_.calcAdjustment(setPoint_, processValue_);
-        QVERIFY(processValue_ == setPoint_);
+            processValue_ += pid.calcAdjustment(processValue_);
+        QVERIFY(processValue_ == targetvValue_);
     }
 
     void testStablizationIn400()
     {
+        PIDController pid(initCnds_, targetvValue_);
         double stepsToSetPoint = 400;
         for(int i = 0; i < stepsToSetPoint; ++i)
-            processValue_ += pid_.calcAdjustment(setPoint_, processValue_);
-        QVERIFY(processValue_ == setPoint_);
+            processValue_ += pid.calcAdjustment(processValue_);
+        QVERIFY(processValue_ == targetvValue_);
     }
 };
 
