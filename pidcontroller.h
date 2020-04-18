@@ -3,31 +3,32 @@
 
 #include <QDebug>
 
+
+#include <initialconditions.h>
+
 class PIDController
 {
 
 public:
     PIDController(
-            double updateInterval,
-            double maxAdjust, double minAdjust,
-            double Kp = 0.03, double Kd = 0.01, double Ki = 0.001
+            std::shared_ptr<InitialConditions> ic,
+            double setPoint
             ):
-        updateInterval_(updateInterval > 0 ? updateInterval : 1.0),
-        maxCtrlAdjust_(maxAdjust), minCtrlAdjust_(minAdjust),
-        Kp_(Kp), Kd_(Kd), Ki_(Ki)
+        initialConditions_(ic),
+        setPoint_(setPoint)
     {}
 
-    double calcAdjustment(double setPoint, double processValue)
+    double calcAdjustment(double processValue)
     {
-        double error = setPoint - processValue;
+        double error = setPoint_ - processValue;
 
-        double proportionalTerm = Kp_ * error;
+        double proportionalTerm = initialConditions_->pidProportional() * error;
 
-        integralSum_ += error * updateInterval_;
-        double integralTerm = Ki_ * integralSum_;
+        integralSum_ += error * initialConditions_->pidUpdateInterval();
+        double integralTerm = initialConditions_->pidIntegral() * integralSum_;
 
-        double derivative = (error - lastError_) / updateInterval_;
-        double derivativeTerm = Kd_ * derivative;
+        double derivative = (error - lastError_) / initialConditions_->pidUpdateInterval();
+        double derivativeTerm = initialConditions_->pidDerivative() * derivative;
 
         double adjustment = proportionalTerm + integralTerm + derivativeTerm;
 
@@ -36,20 +37,19 @@ public:
 
     double adjustInRange(double adjustment)
     {
-        if (adjustment < minCtrlAdjust_) return minCtrlAdjust_;
-        else if (adjustment > maxCtrlAdjust_) return maxCtrlAdjust_;
+        if (adjustment < initialConditions_->pidMinAdjust()) return initialConditions_->pidMinAdjust();
+        else if (adjustment > initialConditions_->pidMaxAdjust()) return initialConditions_->pidMaxAdjust();
         else return adjustment;
     }
 
     void reset() { integralSum_ = 0.0; }
 
+    void setPoint(double newSetPoint) { setPoint_ = newSetPoint; }
+    double setPoint() { return setPoint_; }
+
 private:
-    double updateInterval_;
-    double maxCtrlAdjust_;
-    double minCtrlAdjust_;
-    double Kp_;
-    double Kd_;
-    double Ki_;
+    std::shared_ptr<InitialConditions> initialConditions_;
+    double setPoint_ = 0.0;
     double lastError_ = 0.0;
     double integralSum_ = 0.0;
 

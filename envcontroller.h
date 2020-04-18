@@ -18,19 +18,20 @@ class EnvController : public QObject
     Q_OBJECT
 
 public:
-    EnvController(QGraphicsScene* const envScene=NULL) :
-        envScene_(envScene)
+    EnvController(std::shared_ptr<InitialConditions> ic, QGraphicsScene* const envScene=NULL) :
+        envScene_(envScene),
+        initCnds_(ic)
     {}
 
     void init()
     {
         rd_ = std::make_unique<std::random_device>();
         mt_ = std::make_unique<std::mt19937>(rd_->operator()());
-        dx_distro_ = std::make_unique<std::uniform_real_distribution<double> >(MIN_CAR_DX, MAX_CAR_DX);
-        gen_distro_ = std::make_unique<std::uniform_int_distribution<int> >(MIN_GEN_INTERVAL, MAX_GEN_INTERVAL);
+        dx_distro_ = std::make_unique<std::uniform_real_distribution<double> >(initCnds_->minCarDx, initCnds_->maxCarDx);
+        gen_distro_ = std::make_unique<std::uniform_int_distribution<int> >(initCnds_->minGenInterval, initCnds_->maxGenInterval);
         connect(&envUpdate_, SIGNAL(timeout()), this, SLOT(update()));
-        envUpdate_.start(UPDATE_INTERVAL);
-        QTimer::singleShot(START_DELAY, this, SLOT(trigger()));
+        envUpdate_.start(initCnds_->updateInterval);
+        QTimer::singleShot(initCnds_->startDelay, this, SLOT(trigger()));
     }
 
 public slots:
@@ -78,7 +79,7 @@ public slots:
     void addCar()
     {
         QCarGraphics* carGrPtr = new QCarGraphics();
-        CarModel* carPtr = new CarModel(randDx());
+        CarModel* carPtr = new CarModel(initCnds_, randDx());
         connect(carPtr, SIGNAL(reachedLaneEnd(int)), this, SLOT(triggerRemoveCar(int)));
         connect(carPtr, SIGNAL(lanePosChanged(int, double)), this, SLOT(updateCarView(int, double)));
         connect(&envUpdate_, SIGNAL(timeout()), carPtr, SLOT(update()));
@@ -99,7 +100,7 @@ public slots:
         for(std::size_t i = 0; i < cars_.size() - 2; ++i)
         {
             double distanceToNext = cars_[i + 1].first->xPos() - cars_[i].first->xPos();
-            if (distanceToNext < DISTANCE_TO_NEXT) cars_[i].first->frontSensor(cars_[i + 1].first->preferredDx());
+            if (distanceToNext < initCnds_->distanceToNext) cars_[i].first->frontSensor(cars_[i + 1].first->preferredDx());
         }
     }
 
@@ -135,17 +136,7 @@ protected:
     std::unordered_set<int> removedCarIDs_;
     int removeNextCycle_ = 0;
 
-
-    inline static const double MIN_CAR_DX = 1.8;
-    inline static double MAX_CAR_DX = 2.5;
-    inline static double DISTANCE_TO_NEXT = 50.0;
-    inline static int MIN_GEN_INTERVAL = 3000;
-    inline static int MAX_GEN_INTERVAL = 5500;
-
-    inline static int UPDATE_INTERVAL = 40;
-    inline static int START_DELAY = 500;
-
-
+    std::shared_ptr<InitialConditions> initCnds_;
 };
 
 #endif // ENVCONTROLLER_H
