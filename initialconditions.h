@@ -7,16 +7,16 @@ struct PIDConf
     double derivative = 0.01;
     double integral = 0.001;
     double updateInterval = 1.0;
-    double maxAdjustment = 0.04;
+    double maxAdjustment = 0.1;
     double minAdjustment = -0.7;
 };
 
 struct InitialConditions
 {
     PIDConf pidConsts;
-    double minCarDx = 1.8;
-    double maxCarDx = 2.5;
-    double distanceToNext = 55.0;
+    double minCarDx = 1.0;
+    double maxCarDx = 2.0;
+    double distanceToNext = 40.0;
     int minGenInterval = 3000;
     int maxGenInterval = 5500;
     int updateInterval = 40;

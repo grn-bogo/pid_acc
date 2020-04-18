@@ -17,7 +17,6 @@ class CarModel : public QObject
 
 public:
     CarModel(std::shared_ptr<InitialConditions> ic, double dx = 2.5):
-        setpointDx_(dx),
         pid_(ic, dx),
         id_(CarModel::carID++),
         trackEnd_(ic->laneLength)
@@ -25,14 +24,14 @@ public:
 
     inline static int carID = 1;
     int id() const { return id_; }
-    double preferredDx() const { return setpointDx_; }
+    double preferredDx() const { return pid_.setPoint(); }
     double currentDx() const { return currentDx_; }
     double xPos() const { return xPos_; }
 
 public slots:
     void frontSensor(double obstacleDx)
     {
-        if (setpointDx_ != obstacleDx)
+        if (pid_.setPoint() != obstacleDx)
         {
             pid_.reset();
             pid_.setPoint(obstacleDx);
@@ -56,7 +55,6 @@ signals:
 protected:
     double xPos_ = 0.0;
     double prefferedDx_ = 0.0;
-    double setpointDx_ = 0.0;
     double currentDx_ = 0.0;
     PIDController pid_;
     int id_;

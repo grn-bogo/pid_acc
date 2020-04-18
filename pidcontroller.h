@@ -45,7 +45,7 @@ public:
     void reset() { integralSum_ = 0.0; }
 
     void setPoint(double newSetPoint) { setPoint_ = newSetPoint; }
-    double setPoint() { return setPoint_; }
+    double setPoint() const { return setPoint_; }
 
 private:
     std::shared_ptr<InitialConditions> initialConditions_;
