@@ -18,12 +18,28 @@ protected:
     PIDController pid_;
     double setPoint_ = 2.5;
     double processValue_ = 0.0;
-    int stepsToSetPoint_ = 2000;
 
 private slots:
-    void testStablization()
+    void testStablizationIn2000()
     {
-        for(int i = 0; i < stepsToSetPoint_; ++i)
+        double stepsToSetPoint = 2000;
+        for(int i = 0; i < stepsToSetPoint; ++i)
+            processValue_ += pid_.calcAdjustment(setPoint_, processValue_);
+        QVERIFY(processValue_ == setPoint_);
+    }
+
+    void testStablizationIn1000()
+    {
+        double stepsToSetPoint = 1000;
+        for(int i = 0; i < stepsToSetPoint; ++i)
+            processValue_ += pid_.calcAdjustment(setPoint_, processValue_);
+        QVERIFY(processValue_ == setPoint_);
+    }
+
+    void testStablizationIn400()
+    {
+        double stepsToSetPoint = 400;
+        for(int i = 0; i < stepsToSetPoint; ++i)
             processValue_ += pid_.calcAdjustment(setPoint_, processValue_);
         QVERIFY(processValue_ == setPoint_);
     }
